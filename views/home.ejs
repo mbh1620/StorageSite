@@ -1,0 +1,214 @@
+<% include ./partials/header.ejs %>
+
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1 class="display-4">Dash</h1>
+    <p class="lead">This is where all of your files and media will be displayed. First you will need to Log in.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="form-group">
+    <nav aria-label="breadcrumb">
+      <ol id="breadcrumblist" class="breadcrumb">
+        <li class="breadcrumb-item item active" aria-current="page"><i class="fas fa-folder"></i></li>
+        <li class="breadcrumb-item item" onclick="updatedeletedir(-1)"><a id="home">Home</a></li>
+
+      </ol>
+    </nav>
+    <div class="btn-group" role="group" aria-label="Basic example">
+      <button type="button" onclick="showtext()" class="btn btn-light">Create a new folder</button>
+    </div>
+    <div class="input-group mb-3 nameentry" style="display:none">
+      <div class="input-group-prepend">
+        <button class="btn btn-outline-secondary addnewfolder" onclick="createnewfolder()" type="button"
+          id="button-addon1">Create</button>
+      </div>
+      <input type="text" class="namebox form-control" placeholder="Folder name"
+        aria-label="Example text with button addon" aria-describedby="button-addon1">
+    </div>
+
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="basic-addon1">Search</span>
+      </div>
+      <input type="text" class="form-control" placeholder="Search Files" aria-label="Username"
+        aria-describedby="basic-addon1">
+    </div>
+
+
+
+    <ul id="list" class="list-group" style="max-height: 500px; overflow: scroll;">
+
+      <% for (var i = 0; i< files.length; i++) { %>
+      <li id="<%= i %>" class="list-group-item" onclick="updatedir('<%= files[i]%>')"><a href="#"><%= files[i] %></a></li>
+      <% } %>
+
+
+    </ul>
+
+
+  </div>
+
+</div>
+
+<script>
+
+  //----------------------------------------------------
+  //                BREADCRUMB FUNCTIONALITY
+  //----------------------------------------------------
+  var breadcrumb = []
+  var currentpath = "./"
+
+  function updatebreadcrumb(){
+    //Destroy breadcrumb li elements which are not in the most recent 
+    var breadcrumbList = document.getElementById("breadcrumblist").getElementsByTagName("li");
+    var number = breadcrumbList.length
+    for(var x = 0; x < number; x++){
+      $("#b"+x).remove()
+    }
+    
+    //Create new breadcrumb li elements for most recent 
+    for(var x = 0; x < breadcrumb.length; x++){
+      if(x == breadcrumb.length - 1){
+        $(".breadcrumb").append(
+        $("<li/>")
+        .attr("class", "breadcrumb-item")
+        .attr("id", "b"+x)
+        .text(breadcrumb[x])
+      )
+      } else {
+
+      $(".breadcrumb").append(
+        $("<li/>")
+        .attr("class", "breadcrumb-item")
+        .attr("id", "b"+x)
+        .attr("onclick", "updatedeletedir('" + x + "')")
+        .text(breadcrumb[x])
+      )
+    }
+    
+  }
+  }
+
+  
+
+  updatebreadcrumb();
+
+  function updatedeletedir(num){
+    console.log("deleted!")
+    var times = breadcrumb.length - num 
+    
+    console.log("NUM = " + times)
+    var x = 0;
+    while(x < times - 1){
+      x++
+      breadcrumb.pop()
+      currentpath = currentpath.substr(0, currentpath.lastIndexOf("/"))
+    }
+    console.log(times)
+    console.log(currentpath)
+    searchdir(currentpath)
+    updatebreadcrumb()
+  }
+
+//--------------------------------------------
+//            UPDATE CURRENT DIR
+//--------------------------------------------
+
+function updatedir(newdir){
+
+console.log("UPDATING DIR:")
+
+//Add new dir to breadcrumb
+breadcrumb.push(newdir)
+updatebreadcrumb();
+
+//update current dir
+currentpath = currentpath + '/' + newdir
+
+//scan new dir and return files to list
+searchdir(currentpath);
+}
+
+
+
+//--------------------------------------------
+//              CREATE NEW DIR
+//--------------------------------------------
+
+
+
+  //Function for showing textbox 
+  function showtext() {
+    $(".nameentry").toggle()
+  }
+  //Function for when enter is pressed
+  $(".namebox").on('keyup', function (e) {
+    if (e.keyCode === 13) {
+      createnewfolder()
+    }
+  });
+
+  //Function for creating a new folder
+  function createnewfolder() {
+    console.log("CREATED FILE " + currentpath)
+    var name = $(".namebox").val()
+
+    //PATH FOR TESTING IS SET TO ./
+    var path = currentpath
+    //Send POST request with name and path to /newfolder
+    $.ajax({
+      type: "POST",
+      url: '/newfolder',
+      data: { name: name, path: path },
+    });
+
+    $(".namebox").val("");
+    
+    //call searchdir function to refresh listing
+    searchdir(path)
+
+  }
+
+  //------------------------------------
+  //            SEARCH DIR FUNCTION
+  //------------------------------------
+
+
+  function searchdir(directory) {
+
+    //DIR FOR TESTING IS ./
+    var dir = directory;
+    $.post('/searchdir', { dir: dir }).done(function (response) {
+      console.log(response)
+      data = response
+      //Code here should get rid of current listing and re-populate with new folders
+    var liList = document.getElementById("list").getElementsByTagName("li");
+    var largo = liList.length
+
+      for (var x = 0; x < largo ; x++){
+      $("#" + x).remove();
+    }
+    for (var x = 0; x < response.length; x++) {
+      $('.list-group').append(
+        $('<li/>')
+          .attr("id", x)
+          .addClass("list-group-item")
+    
+      );
+      $('#'+x).append(
+        $("<a/>")
+        .attr("href", "#")
+        .attr("onclick", 'updatedir("' + response[x] + '")')
+        .text(response[x])
+      )
+    }
+    updatebreadcrumb();
+
+  });
+
+}
+
+</script>
+<% include ./partials/footer.ejs %>
