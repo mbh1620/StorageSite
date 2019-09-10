@@ -28,7 +28,8 @@
         aria-label="Example text with button addon" aria-describedby="button-addon1">
     </div>
     <!-- file input -->
-
+    <button style="float:right" onclick="deleteitemshow()" class="btn btn-light"><i class="fas fa-trash"></i> Delete</button>
+    <button style="float:right" class="btn btn-light"><i class="fas fa-upload"></i> Upload files</button>
     
     <div class="input-group mb-3">
       <div class="input-group-prepend">
@@ -56,6 +57,25 @@
 </div>
 
 <script>
+
+  var isDelete = false;
+
+  function deleteitemshow(){
+    isDelete = !isDelete;
+    searchdir(currentpath);
+  }
+
+  function deleteitem(name){
+    //AJAX CALL TO SERVER TO DELETE THE SELECTED FILE
+    $.post('/deletedir', { dir: currentpath, name: name })
+
+    searchdir(currentpath);
+
+    
+  }
+
+
+
 
   //----------------------------------------------------
   //                BREADCRUMB FUNCTIONALITY
@@ -220,18 +240,26 @@
             break;
 
         }
+        
+        var listhtml;
+        if (isDelete == true){
+          listhtml = "<button onclick='deleteitem(`" + response[x].filename + "`)' style='float:right;margin-left:20px; margin-top:0px;' class='btn btn-sm btn-danger'>Delete</button>"
+        } else {
+          listhtml = ""
+        }
 
         $('.list-group').append(
           $('<li/>')
             .attr("id", x)
             .addClass("list-group-item")
+            .html(listhtml)
 
         );
         $('#' + x).append(
           $("<a/>")
             .attr("href", "#")
             .attr("onclick", 'updatedir("' + response[x].filename + '")')
-            .html(text + " " + response[x].filename)
+            .html(text + '' + response[x].filename)
             .append(
               $("<em/>")
                 .attr("style", "float:right")

@@ -8,7 +8,7 @@ var express = require("express");
 var app = express();
 var mongoose = require("mongoose");
 var bodyParser = require("body-parser");
-var fs = require("fs");
+var fs = require("fs-extra");
 var methodOverride = require("method-override");
 var passport = require("passport");
 var passportLocalMongoose = require("passport-local-mongoose");
@@ -84,6 +84,14 @@ app.post("/newfolder", function(req,res){
     console.log("NEW FILE CREATED: " + path + req.body.name);
     fs.mkdirSync(path + "/" + nameoffile);
     res.redirect("/");
+})
+
+//Route for deleting a directory
+app.post("/deletedir", function(req, res){
+    var path = req.body.dir;
+    var name = req.body.name
+    console.log("FILE DELETED: " + path + "/" + req.body.name)
+    fs.removeSync(path + "/" + name)
 })
 
 
