@@ -59,10 +59,22 @@ app.get("/", function(req,res){
 app.post("/searchdir", function(req,res){
     var dir = req.body.dir;
     console.log("DIR SEARCHED: " + dir);
-    var files = fs.readdirSync(dir)
-
+    var files = fs.readdirSync(dir) //Files returns an array of filenames
+    var objfiles = []
+    files.forEach(function(filename){
+        var the_file = new Object();
+        the_file.filename = filename;
+        the_file.stats = fs.statSync(dir + "/" + filename)
+        if(the_file.stats.isFile()){
+            the_file.filetype = "File"; 
+        }
+        else {
+            the_file.filetype = "Directory";
+        }
+        objfiles.push(the_file);
+    })
     console.log(dir, files);
-    res.send(files)
+    res.send(objfiles)
 })
 
 //Route for creating a new directory

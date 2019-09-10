@@ -41,7 +41,8 @@
     <ul id="list" class="list-group" style="max-height: 500px; overflow: scroll;">
 
       <% for (var i = 0; i< files.length; i++) { %>
-      <li id="<%= i %>" class="list-group-item" onclick="updatedir('<%= files[i]%>')"><a href="#"><%= files[i] %></a></li>
+      <li id="<%= i %>" class="list-group-item" onclick="updatedir('<%= files[i]%>')"><a href="#"><%= files[i] %></a>
+      </li>
       <% } %>
 
 
@@ -60,48 +61,48 @@
   var breadcrumb = []
   var currentpath = "./"
 
-  function updatebreadcrumb(){
+  function updatebreadcrumb() {
     //Destroy breadcrumb li elements which are not in the most recent 
     var breadcrumbList = document.getElementById("breadcrumblist").getElementsByTagName("li");
     var number = breadcrumbList.length
-    for(var x = 0; x < number; x++){
-      $("#b"+x).remove()
+    for (var x = 0; x < number; x++) {
+      $("#b" + x).remove()
     }
-    
+
     //Create new breadcrumb li elements for most recent 
-    for(var x = 0; x < breadcrumb.length; x++){
-      if(x == breadcrumb.length - 1){
+    for (var x = 0; x < breadcrumb.length; x++) {
+      if (x == breadcrumb.length - 1) {
         $(".breadcrumb").append(
-        $("<li/>")
-        .attr("class", "breadcrumb-item")
-        .attr("id", "b"+x)
-        .text(breadcrumb[x])
-      )
+          $("<li/>")
+            .attr("class", "breadcrumb-item")
+            .attr("id", "b" + x)
+            .text(breadcrumb[x])
+        )
       } else {
 
-      $(".breadcrumb").append(
-        $("<li/>")
-        .attr("class", "breadcrumb-item")
-        .attr("id", "b"+x)
-        .attr("onclick", "updatedeletedir('" + x + "')")
-        .text(breadcrumb[x])
-      )
+        $(".breadcrumb").append(
+          $("<li/>")
+            .attr("class", "breadcrumb-item")
+            .attr("id", "b" + x)
+            .attr("onclick", "updatedeletedir('" + x + "')")
+            .text(breadcrumb[x])
+        )
+      }
+
     }
-    
-  }
   }
 
-  
+
 
   updatebreadcrumb();
 
-  function updatedeletedir(num){
+  function updatedeletedir(num) {
     console.log("deleted!")
-    var times = breadcrumb.length - num 
-    
+    var times = breadcrumb.length - num
+
     console.log("NUM = " + times)
     var x = 0;
-    while(x < times - 1){
+    while (x < times - 1) {
       x++
       breadcrumb.pop()
       currentpath = currentpath.substr(0, currentpath.lastIndexOf("/"))
@@ -112,30 +113,30 @@
     updatebreadcrumb()
   }
 
-//--------------------------------------------
-//            UPDATE CURRENT DIR
-//--------------------------------------------
+  //--------------------------------------------
+  //            UPDATE CURRENT DIR
+  //--------------------------------------------
 
-function updatedir(newdir){
+  function updatedir(newdir) {
 
-console.log("UPDATING DIR:")
+    console.log("UPDATING DIR:")
 
-//Add new dir to breadcrumb
-breadcrumb.push(newdir)
-updatebreadcrumb();
+    //Add new dir to breadcrumb
+    breadcrumb.push(newdir)
+    updatebreadcrumb();
 
-//update current dir
-currentpath = currentpath + '/' + newdir
+    //update current dir
+    currentpath = currentpath + '/' + newdir
 
-//scan new dir and return files to list
-searchdir(currentpath);
-}
+    //scan new dir and return files to list
+    searchdir(currentpath);
+  }
 
 
 
-//--------------------------------------------
-//              CREATE NEW DIR
-//--------------------------------------------
+  //--------------------------------------------
+  //              CREATE NEW DIR
+  //--------------------------------------------
 
 
 
@@ -165,7 +166,7 @@ searchdir(currentpath);
     });
 
     $(".namebox").val("");
-    
+
     //call searchdir function to refresh listing
     searchdir(path)
 
@@ -184,31 +185,37 @@ searchdir(currentpath);
       console.log(response)
       data = response
       //Code here should get rid of current listing and re-populate with new folders
-    var liList = document.getElementById("list").getElementsByTagName("li");
-    var largo = liList.length
+      var liList = document.getElementById("list").getElementsByTagName("li");
+      var largo = liList.length
 
-      for (var x = 0; x < largo ; x++){
-      $("#" + x).remove();
-    }
-    for (var x = 0; x < response.length; x++) {
-      $('.list-group').append(
-        $('<li/>')
-          .attr("id", x)
-          .addClass("list-group-item")
-    
-      );
-      $('#'+x).append(
-        $("<a/>")
-        .attr("href", "#")
-        .attr("onclick", 'updatedir("' + response[x] + '")')
-        .text(response[x])
-      )
-    }
-    updatebreadcrumb();
+      for (var x = 0; x < largo; x++) {
+        $("#" + x).remove();
+      }
+      for (var x = 0; x < response.length; x++) {
+        $('.list-group').append(
+          $('<li/>')
+            .attr("id", x)
+            .addClass("list-group-item")
 
-  });
+        );
+        $('#' + x).append(
+          $("<a/>")
+            .attr("href", "#")
+            .attr("onclick", 'updatedir("' + response[x].filename + '")')
+            .text(response[x].filename)
+            .append(
+              $("<em/>")
+                .attr("style", "float:right")
+                .text(response[x].filetype + " " + response[x].stats.size + " bytes")
+            )
+        )
 
-}
+      }
+      updatebreadcrumb();
+
+    });
+
+  }
 
 </script>
 <% include ./partials/footer.ejs %>
