@@ -27,7 +27,9 @@
       <input type="text" class="namebox form-control" placeholder="Folder name"
         aria-label="Example text with button addon" aria-describedby="button-addon1">
     </div>
+    <!-- file input -->
 
+    
     <div class="input-group mb-3">
       <div class="input-group-prepend">
         <span class="input-group-text" id="basic-addon1">Search</span>
@@ -182,16 +184,43 @@
     //DIR FOR TESTING IS ./
     var dir = directory;
     $.post('/searchdir', { dir: dir }).done(function (response) {
-      console.log(response)
+      //console.log(response)
       data = response
       //Code here should get rid of current listing and re-populate with new folders
       var liList = document.getElementById("list").getElementsByTagName("li");
       var largo = liList.length
 
+
+
+
       for (var x = 0; x < largo; x++) {
         $("#" + x).remove();
       }
       for (var x = 0; x < response.length; x++) {
+        if (response[x].filetype == "File" && response[x].filename[0] != '.') {
+          var fileExtenstion = response[x].filename.split('.').pop();
+          response[x].fileExtenstion = fileExtenstion;
+          console.log(response[x]); 
+        } else if (response[x].filetype == "Directory"){
+          response[x].fileExtenstion = "Folder";
+        }
+        var text;
+
+        switch(response[x].fileExtenstion) {
+          case ".txt":
+            text = "<i style='font-size:20; margin-right:20px;' class='fas fa-file-word'></i>"
+            break;
+
+          case "Folder":
+            text = "<i style='font-size:20;margin-right:20px;' class='fas fa-folder'></i>"
+            break;
+          
+          default:
+            text = "<i style='font-size:20;margin-right:20px;' class='fas fa-file'></i>"
+            break;
+
+        }
+
         $('.list-group').append(
           $('<li/>')
             .attr("id", x)
@@ -202,11 +231,11 @@
           $("<a/>")
             .attr("href", "#")
             .attr("onclick", 'updatedir("' + response[x].filename + '")')
-            .text(response[x].filename)
+            .html(text + " " + response[x].filename)
             .append(
               $("<em/>")
                 .attr("style", "float:right")
-                .text(response[x].filetype + " " + response[x].stats.size + " bytes")
+                .text(response[x].stats.size + " bytes")
             )
         )
 
