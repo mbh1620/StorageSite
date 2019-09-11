@@ -28,9 +28,22 @@
         aria-label="Example text with button addon" aria-describedby="button-addon1">
     </div>
     <!-- file input -->
-    <button style="float:right" onclick="deleteitemshow()" class="btn btn-light"><i class="fas fa-trash"></i> Delete</button>
-    <button style="float:right" class="btn btn-light"><i class="fas fa-upload"></i> Upload files</button>
-    
+    <button style="float:right" onclick="deleteitemshow()" class="btn btn-light"><i class="fas fa-trash"></i>
+      Delete</button>
+    <button style="float:right" onclick="showupload()" class="btn btn-light"><i class="fas fa-upload"></i> Upload
+      files</button>
+
+    <!-- File upload input -->
+    <div id="drop-area">
+      <form class="my-form">
+        <p id="drag-label">Drag files here to upload</p>
+        <i style="display:block;font-size:30;margin-bottom:30px;margin-top: 30px" class="fas fa-upload"></i>
+        <input type="file" id="fileElem" multiple onchange="handleFiles(this.files)">
+        <label class="button" for="fileElem">Select some files</label>
+        <progress id="progress-bar" max=100 value=0></progress>
+      </form>
+    </div>
+
     <div class="input-group mb-3">
       <div class="input-group-prepend">
         <span class="input-group-text" id="basic-addon1">Search</span>
@@ -58,20 +71,94 @@
 
 <script>
 
+
+  // Show upload function
+
+
+
+  function showupload() {
+    $("#drop-area").toggle();
+
+  }
+
+  //Drag and drop 
+  let dropArea = document.getElementById('drop-area')
+    ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, preventDefaults, false)
+    })
+
+  function preventDefaults(e) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  ;['dragenter', 'dragover'].forEach(eventName => {
+  dropArea.addEventListener(eventName, highlight, false)
+})
+
+;['dragleave', 'drop'].forEach(eventName => {
+  dropArea.addEventListener(eventName, unhighlight, false)
+})
+
+function highlight(e) {
+  dropArea.classList.add('highlight')
+}
+
+function unhighlight(e) {
+  dropArea.classList.remove('highlight')
+}
+
+dropArea.addEventListener('drop', handleDrop, false)
+
+function handleDrop(e) {
+  let dt = e.dataTransfer
+  let files = dt.files
+
+  handleFiles(files)
+}
+
+function handleFiles(files) {
+  
+  ([...files]).forEach(uploadFile)
+  
+}
+
+function uploadFile(file) {
+  let url = currentpath
+  let formData = new FormData()
+  console.log(file.name)
+  $("#drag-label").text(file.name)
+  formData.append('file', file)
+
+  fetch(url, {
+    method: 'POST',
+    body: formData
+  })
+  .then(() => { /* Done. Inform the user */ })
+  .catch(() => { /* Error. Inform the user */ })
+}
+
+
+
+
+
+//Delete item function
+
+
   var isDelete = false;
 
-  function deleteitemshow(){
+  function deleteitemshow() {
     isDelete = !isDelete;
     searchdir(currentpath);
   }
 
-  function deleteitem(name){
+  function deleteitem(name) {
     //AJAX CALL TO SERVER TO DELETE THE SELECTED FILE
     $.post('/deletedir', { dir: currentpath, name: name })
 
     searchdir(currentpath);
 
-    
+
   }
 
 
@@ -220,13 +307,13 @@
         if (response[x].filetype == "File" && response[x].filename[0] != '.') {
           var fileExtenstion = response[x].filename.split('.').pop();
           response[x].fileExtenstion = fileExtenstion;
-          console.log(response[x]); 
-        } else if (response[x].filetype == "Directory"){
+          console.log(response[x]);
+        } else if (response[x].filetype == "Directory") {
           response[x].fileExtenstion = "Folder";
         }
         var text;
 
-        switch(response[x].fileExtenstion) {
+        switch (response[x].fileExtenstion) {
           case ".txt":
             text = "<i style='font-size:20; margin-right:20px;' class='fas fa-file-word'></i>"
             break;
@@ -234,15 +321,15 @@
           case "Folder":
             text = "<i style='font-size:20;margin-right:20px;' class='fas fa-folder'></i>"
             break;
-          
+
           default:
             text = "<i style='font-size:20;margin-right:20px;' class='fas fa-file'></i>"
             break;
 
         }
-        
+
         var listhtml;
-        if (isDelete == true){
+        if (isDelete == true) {
           listhtml = "<button onclick='deleteitem(`" + response[x].filename + "`)' style='float:right;margin-left:20px; margin-top:0px;' class='btn btn-sm btn-danger'>Delete</button>"
         } else {
           listhtml = ""

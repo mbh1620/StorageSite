@@ -13,6 +13,7 @@ var methodOverride = require("method-override");
 var passport = require("passport");
 var passportLocalMongoose = require("passport-local-mongoose");
 var LocalStrategy = require("passport-local");
+var multer = require("multer")
 
 app.use(bodyParser.urlencoded({ extended: false }))
 const testFolder = './';
@@ -93,6 +94,9 @@ app.post("/deletedir", function(req, res){
     console.log("FILE DELETED: " + path + "/" + req.body.name)
     fs.removeSync(path + "/" + name)
 })
+
+//Route for File Upload
+
 
 
 app.listen("3000");
