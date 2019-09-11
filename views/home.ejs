@@ -138,12 +138,12 @@
     xhr.open('POST', '/uploadfile', true);
     xhr.onreadystatechange = function () {
 
-    console.log("hello")
-        $("#drop-area").toggle();
-        searchdir(currentpath);
+      console.log("hello")
+      $("#drop-area").toggle();
+      searchdir(currentpath);
 
-  
-};
+
+    };
     xhr.send(formData)
 
   }
@@ -353,17 +353,37 @@
             .html(listhtml)
 
         );
-        $('#' + x).append(
-          $("<a/>")
-            .attr("href", "#")
-            .attr("onclick", 'updatedir("' + response[x].filename + '")')
-            .html(text + '' + response[x].filename)
-            .append(
-              $("<em/>")
-                .attr("style", "float:right")
-                .text(response[x].stats.size + " bytes")
-            )
-        )
+
+        if (response[x].filetype == "File") {
+          console.log(currentpath + "/" + response[x].filename)
+          $('#' + x).append(
+            $("<a/>")
+              .attr("href", "#")
+              .attr("href", currentpath + "/" + response[x].filename)
+              .attr("download", response[x].filename)
+              .html(text + '' + response[x].filename)
+              .append(
+                $("<em/>")
+                  .attr("style", "float:right")
+                  .text(response[x].stats.size + " bytes")
+              )
+          )
+        } else {
+          $('#' + x).append(
+            $("<a/>")
+              .attr("href", "#")
+              .attr("onclick", 'updatedir("' + response[x].filename + '")')
+              .html(text + '' + response[x].filename)
+              .append(
+                $("<em/>")
+                  .attr("style", "float:right")
+                  .text(response[x].stats.size + " bytes")
+              )
+          )
+        }
+
+        
+
 
       }
       updatebreadcrumb();
