@@ -35,10 +35,10 @@
 
     <!-- File upload input -->
     <div id="drop-area">
-      <form class="my-form">
+      <form id="fileuploadform" class="my-form" action="/uploadfile" method="POST" enctype="multipart/form-data">
         <p id="drag-label">Drag files here to upload</p>
         <i style="display:block;font-size:30;margin-bottom:30px;margin-top: 30px" class="fas fa-upload"></i>
-        <input type="file" id="fileElem" multiple onchange="handleFiles(this.files)">
+        <input type="file" name="fileElem" id="fileElem" multiple onchange="handleFiles(this.files)">
         <label class="button" for="fileElem">Select some files</label>
         <progress id="progress-bar" max=100 value=0></progress>
       </form>
@@ -93,56 +93,67 @@
   }
 
   ;['dragenter', 'dragover'].forEach(eventName => {
-  dropArea.addEventListener(eventName, highlight, false)
-})
-
-;['dragleave', 'drop'].forEach(eventName => {
-  dropArea.addEventListener(eventName, unhighlight, false)
-})
-
-function highlight(e) {
-  dropArea.classList.add('highlight')
-}
-
-function unhighlight(e) {
-  dropArea.classList.remove('highlight')
-}
-
-dropArea.addEventListener('drop', handleDrop, false)
-
-function handleDrop(e) {
-  let dt = e.dataTransfer
-  let files = dt.files
-
-  handleFiles(files)
-}
-
-function handleFiles(files) {
-  
-  ([...files]).forEach(uploadFile)
-  
-}
-
-function uploadFile(file) {
-  let url = currentpath
-  let formData = new FormData()
-  console.log(file.name)
-  $("#drag-label").text(file.name)
-  formData.append('file', file)
-
-  fetch(url, {
-    method: 'POST',
-    body: formData
+    dropArea.addEventListener(eventName, highlight, false)
   })
-  .then(() => { /* Done. Inform the user */ })
-  .catch(() => { /* Error. Inform the user */ })
-}
+
+    ;['dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, unhighlight, false)
+    })
+
+  function highlight(e) {
+    dropArea.classList.add('highlight')
+  }
+
+  function unhighlight(e) {
+    dropArea.classList.remove('highlight')
+  }
+
+  dropArea.addEventListener('drop', handleDrop, false)
+
+  function handleDrop(e) {
+    let dt = e.dataTransfer
+    let files = dt.files
+
+    handleFiles(files)
+  }
+
+  function handleFiles(files) {
+
+    ([...files]).forEach(uploadFile)
+
+  }
+
+  function uploadFile(file) {
+    let url = "/uploadfile"
+    let form = document.getElementById("fileuploadform")
+    let formData = new FormData(form)
+    console.log(file.name)
+    $("#drag-label").text(file.name)
+    formData.append('fileElem', file)
+    formData.append('filename', file.name)
+    formData.append("thepath", currentpath)
+
+    var xhr = new XMLHttpRequest();
+    // Add any event handlers here...
+    xhr.open('POST', '/uploadfile', true);
+    xhr.onreadystatechange = function () {
+
+    console.log("hello")
+        $("#drop-area").toggle();
+        searchdir(currentpath);
+
+  
+};
+    xhr.send(formData)
+
+  }
 
 
 
 
 
-//Delete item function
+
+  //Delete item function
 
 
   var isDelete = false;
@@ -167,8 +178,8 @@ function uploadFile(file) {
   //----------------------------------------------------
   //                BREADCRUMB FUNCTIONALITY
   //----------------------------------------------------
-  var breadcrumb = []
-  var currentpath = "./"
+  var breadcrumb = ["public"]
+  var currentpath = "./public"
 
   function updatebreadcrumb() {
     //Destroy breadcrumb li elements which are not in the most recent 

@@ -15,8 +15,20 @@ var passportLocalMongoose = require("passport-local-mongoose");
 var LocalStrategy = require("passport-local");
 var multer = require("multer")
 
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, './public')
+    },
+    filename: function (req, file, cb) {
+      cb(null, file.originalname)
+    }
+  })
+   
+  var upload = multer({ storage: storage })
+
+
 app.use(bodyParser.urlencoded({ extended: false }))
-const testFolder = './';
+const testFolder = './public';
 
 app.use(methodOverride("_method"));
 app.use(bodyParser.json())
@@ -96,7 +108,19 @@ app.post("/deletedir", function(req, res){
 })
 
 //Route for File Upload
+app.post("/uploadfile",upload.array('fileElem', 5), function(req,res){
+    //var path = req;
+    var name = req.fileElem;
+    
+    //console.log(path)
+    
+    console.log("UPLOADED FILE: " + req.body.filename)
+    console.log("thepath   " + req.body.thepath)
+    fs.moveSync("./public/" + req.body.filename, req.body.thepath + "/" + req.body.filename)
+    console.log("done")
+    res.send("DONE");
 
+})
 
 
 app.listen("3000");
