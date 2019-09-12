@@ -72,6 +72,14 @@
 <script>
 
 
+  function downloadfile(file){
+    $.get('/downloadfile', { file: file}).done(function(){
+      file = file.substring(8, file.length)
+      window.location = file;
+    })
+  }
+  
+
   // Show upload function
 
 
@@ -359,7 +367,7 @@
           $('#' + x).append(
             $("<a/>")
               .attr("href", "#")
-              .attr("href", currentpath + "/" + response[x].filename)
+              .attr("onclick", "downloadfile('" + currentpath + "/" + response[x].filename + "')")
               .attr("download", response[x].filename)
               .html(text + '' + response[x].filename)
               .append(

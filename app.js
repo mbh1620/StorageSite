@@ -3,7 +3,7 @@
 //------------------------------------------------------
 // Matt Haywood
 
-
+var path = require("path")
 var express = require("express");
 var app = express();
 var mongoose = require("mongoose");
@@ -119,6 +119,19 @@ app.post("/uploadfile",upload.array('fileElem', 5), function(req,res){
     fs.moveSync("./public/" + req.body.filename, req.body.thepath + "/" + req.body.filename)
     console.log("done")
     res.send("DONE");
+
+})
+
+//Route for File Download 
+
+app.get("/downloadfile", function(req,res){
+    var file = req.query.file;
+    console.log("SENDING FILE: " + file)
+    file = file.substring(1, file.length)
+    console.log(file)
+    console.log(__dirname);
+    res.download(path.join(__dirname, file))
+    
 
 })
 
