@@ -48,7 +48,7 @@
       <div class="input-group-prepend">
         <span class="input-group-text" id="basic-addon1">Search</span>
       </div>
-      <input type="text" class="form-control" placeholder="Search Files" aria-label="Username"
+      <input type="text" id="searchinput" onkeyup="searchfunction()" class="form-control" placeholder="Search Files" aria-label="Username"
         aria-describedby="basic-addon1">
     </div>
 
@@ -70,6 +70,34 @@
 </div>
 
 <script>
+//-----------------------------------------------------------------------------------------
+//                                   START OF JAVASCRIPT
+//-----------------------------------------------------------------------------------------
+
+  //Function for searchbox and filter
+  function searchfunction(){
+    var input, filter, ul, li, a, i, txtvalue;
+    input = document.getElementById('searchinput');
+    filter = input.value.toUpperCase();
+    ul = document.getElementById("list");
+    li = ul.getElementsByTagName('li');
+
+    //Loop through all list items, and hide those who dont match the search query
+    for(i = 0; i < li.length; i++){
+      a = li[i].getElementsByTagName("a")[0];
+      txtvalue = a.textContent || a.innerText;
+      if(txtvalue.toUpperCase().indexOf(filter) > -1){
+        li[i].style.display = "";
+      } else {
+        li[i].style.display = "none";
+      }
+
+    }
+
+  }
+
+
+
 
 
   function downloadfile(file){
@@ -258,6 +286,10 @@
 
     //scan new dir and return files to list
     searchdir(currentpath);
+
+    //Clear search entry
+    $('#searchinput').val("")
+
   }
 
 
