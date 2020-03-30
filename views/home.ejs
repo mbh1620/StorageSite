@@ -1,13 +1,7 @@
 <% include ./partials/header.ejs %>
 
-<div class="jumbotron jumbotron-fluid">
-  <div class="container">
-    <h1 class="display-4">Dash</h1>
-    <p class="lead">This is where all of your files and media will be displayed. First you will need to Log in.</p>
-  </div>
-</div>
 
-<div class="container">
+<div class="container" style="margin-top:100px">
   <div class="form-group">
     <nav aria-label="breadcrumb">
       <ol id="breadcrumblist" class="breadcrumb">
@@ -102,7 +96,9 @@
 
   function downloadfile(file){
     $.get('/downloadfile', { file: file}).done(function(){
-      file = file.substring(8, file.length)
+      file = file.substring(20, file.length)
+      file = file;
+      console.log(file);
       window.location = file;
     })
   }
@@ -172,9 +168,19 @@
     var xhr = new XMLHttpRequest();
     // Add any event handlers here...
     xhr.open('POST', '/uploadfile', true);
+    xhr.upload.onprogress = function(event) {
+	if(event.lengthComputable) { 
+	$("#progress-bar").attr("max", event.total);
+	$("#progress-bar").val(event.loaded);
+	}
+    
+}
+ 
     xhr.onreadystatechange = function () {
 
       console.log("hello")
+      $("#progress-bar").val(0);
+      $("#drag-label").text("Drag files here to upload")
       $("#drop-area").toggle();
       searchdir(currentpath);
 
@@ -214,8 +220,10 @@
   //----------------------------------------------------
   //                BREADCRUMB FUNCTIONALITY
   //----------------------------------------------------
-  var breadcrumb = ["public"]
-  var currentpath = "./public"
+  var breadcrumb = []
+  var currentpath = "/media/pi/ELEMENTS B/<%= currentUser.name %>";
+  
+  breadcrumb.push("<%= currentUser.name %>"); 
 
   function updatebreadcrumb() {
     //Destroy breadcrumb li elements which are not in the most recent 

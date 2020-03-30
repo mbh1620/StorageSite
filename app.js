@@ -11,9 +11,74 @@ var bodyParser = require("body-parser");
 var fs = require("fs-extra");
 var methodOverride = require("method-override");
 var passport = require("passport");
-var passportLocalMongoose = require("passport-local-mongoose");
 var LocalStrategy = require("passport-local");
-var multer = require("multer")
+var multer = require("multer");
+var session = require('express-session')
+var flash = require('express-flash');
+var bcrypt = require('bcrypt');
+var csv = require('csv-parser');
+
+//PASSPORT SETUP
+const initializePassport = require('./passport-config')
+initializePassport(
+    passport, 
+    email => users.find(user => user.email === email),
+    id => users.find(user => user.id === id)
+)
+
+
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(flash())
+app.use(session({
+    secret: "Once again rusty is the cutest dog",
+    resave: false,
+    saveUninitialized: false
+}))
+app.use(passport.initialize());
+app.use(passport.session());
+
+var testFolder = '/media/pi/ELEMENTS\ B';
+
+app.use(methodOverride("_method"));
+
+
+
+
+app.use(function (req, res, next) {
+    res.locals.currentUser = req.user;
+    next();
+});
+
+
+
+
+
+
+
+//USER ARRAY
+
+var users = [];
+
+//LOAD USERS IN FROM CSV FOLDER
+fs.createReadStream('myfile.csv')
+.pipe(csv())
+.on('data', (data) => users.push(data))
+.on('end', () => {
+    console.log(users);
+    
+});
+
+function checkAuthenticated(req, res, next){
+    if(req.isAuthenticated()){
+        return next()
+    }
+    res.redirect('/login');
+}
+
+
+
+
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -26,47 +91,25 @@ var storage = multer.diskStorage({
    
   var upload = multer({ storage: storage })
 
-
-app.use(bodyParser.urlencoded({ extended: false }))
-const testFolder = './public';
-
-app.use(methodOverride("_method"));
-app.use(bodyParser.json())
-
-var UserSchema = new mongoose.Schema({
-    username: String,
-    email: String
-})
-
-UserSchema.plugin(passportLocalMongoose);
-var User = mongoose.model("User", UserSchema);
-
-app.use(require("express-session")({
-    secret: "This is the secret",
-    resave: false,
-    saveUninitialized: false
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-passport.use(new LocalStrategy(User.authenticate()));
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
-
-app.use(function (req,res,next) {
-    res.locals.currentUser = req.user;
-    next();
-})
-
 app.use(express.static(__dirname + "/public"));
+app.use(express.static("/media/pi/ELEMENTS\ B"));
 
 //ROUTES--------------------
 
 //Home page route 
 app.get("/", function(req,res){
-    var files = fs.readdirSync(testFolder)
-    res.render("home.ejs", {files:files});
+    
+    res.render("landingpage.ejs");
 })
+
+app.get("/usersfiles/:user", function(req,res){
+    var user = req.params.user;
+    
+    testFolder = '/media/pi/ELEMENTS\ B/'+ user;
+    var files = fs.readdirSync(testFolder)
+    var breadcrumb = user
+    res.render("home.ejs", {files:files, breadcrumb:breadcrumb} );
+}) 
 
 //Post route for searching a directory 
 app.post("/searchdir", function(req,res){
@@ -127,13 +170,83 @@ app.post("/uploadfile",upload.array('fileElem', 5), function(req,res){
 app.get("/downloadfile", function(req,res){
     var file = req.query.file;
     console.log("SENDING FILE: " + file)
-    file = file.substring(1, file.length)
+    file = file.substring(20, file.length)
     console.log(file)
-    console.log(__dirname);
-    res.download(path.join(__dirname, file))
+    
+    res.download('/media/pi/ELEMENTS\ B'+ file);
     
 
 })
 
 
-app.listen("3000");
+
+//--------------------------------------------------------------------
+//                  ROUTES FOR USERS AND LOGIN 
+//--------------------------------------------------------------------
+
+//Register 
+app.get("/register", function(req, res){
+    res.render("register.ejs");
+})
+
+app.post("/register", function(req, res){
+    var password = req.body.password;
+    var the_hash;
+    bcrypt.hash(password, 10, function(err, hash){
+        the_hash = hash;
+        the_id = Date.now().toString();
+        users.push({
+            id: the_id,
+            name: req.body.name,
+            email: req.body.email,
+            password: hash
+        })
+        fs.mkdirSync('/media/pi/ELEMENTS\ B/' +  req.body.name);
+        var stream = fs.createWriteStream("myfile.csv", {
+            'flags':'a',
+            'encoding': null,
+            'mode':0666
+            });
+        stream.once('open', function(fd){
+            stream.write(the_id + ",");
+            stream.write(req.body.name + ",");
+            stream.write(req.body.email + ",");
+            stream.write(the_hash + "\n");
+            stream.end();
+        });
+        
+        
+        passport.authenticate('local')(req,res, function() {
+            res.redirect("/usersfiles/" + req.body.name );
+        })
+        
+            
+        
+        if(err){
+            res.redirect('/register');
+        }
+        console.log(users);
+    })
+})
+
+//Login 
+
+app.get("/login", function(req, res){
+    res.render("login.ejs");
+    
+})
+
+app.post("/login", passport.authenticate('local'), function(req,res) {
+    res.redirect("/usersfiles/" + req.user.name)
+})
+
+//Logout
+
+app.delete("/logout", function(req,res){
+    req.logOut();
+    res.redirect('/login')
+})
+
+
+
+app.listen("3002");
