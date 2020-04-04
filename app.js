@@ -18,6 +18,18 @@ var flash = require('express-flash');
 var bcrypt = require('bcrypt');
 var csv = require('csv-parser');
 
+var testFolder;
+
+//Configure the app based on whether its development or production
+
+if(process.env.NODE_ENV === 'production') {
+    testFolder = '/media/pi/ELEMENTS\ B/'
+  }
+
+if(process.env.NODE_ENV === 'development') {
+    testFolder = '/Users/matthaywood/Desktop/StorageSite/StorageSite/public/'
+  }
+
 //PASSPORT SETUP
 const initializePassport = require('./passport-config')
 initializePassport(
@@ -37,8 +49,6 @@ app.use(session({
 }))
 app.use(passport.initialize());
 app.use(passport.session());
-
-var testFolder = '/media/pi/ELEMENTS\ B';
 
 app.use(methodOverride("_method"));
 
@@ -92,7 +102,7 @@ var storage = multer.diskStorage({
   var upload = multer({ storage: storage })
 
 app.use(express.static(__dirname + "/public"));
-app.use(express.static("/media/pi/ELEMENTS\ B"));
+app.use(express.static(testFolder));
 
 //ROUTES--------------------
 
@@ -105,10 +115,10 @@ app.get("/", function(req,res){
 app.get("/usersfiles/:user", function(req,res){
     var user = req.params.user;
     
-    testFolder = '/media/pi/ELEMENTS\ B/'+ user;
+    testFolder = testFolder + user;
     var files = fs.readdirSync(testFolder)
     var breadcrumb = user
-    res.render("home.ejs", {files:files, breadcrumb:breadcrumb} );
+    res.render("home.ejs", {files:files, breadcrumb:breadcrumb, testFolder:testFolder} );
 }) 
 
 //Post route for searching a directory 
@@ -173,10 +183,23 @@ app.get("/downloadfile", function(req,res){
     file = file.substring(20, file.length)
     console.log(file)
     
-    res.download('/media/pi/ELEMENTS\ B'+ file);
+    res.download(testFolder + file);
     
 
 })
+
+//Route for renaming a file
+
+app.post("/rename", function(req,res){
+    var file = req.query.file;
+    console.log("RENAMING FILE: " + file);
+    fs.renameSync(req.body.thepath + "/" + req.body.filename, req.body.thepath + "/" + req.body.newfilename);
+    console.log("DONE");
+})
+
+//Route for reordering a file 
+
+
 
 
 
@@ -201,7 +224,7 @@ app.post("/register", function(req, res){
             email: req.body.email,
             password: hash
         })
-        fs.mkdirSync('/media/pi/ELEMENTS\ B/' +  req.body.name);
+        fs.mkdirSync(testFolder +  req.body.name);
         var stream = fs.createWriteStream("myfile.csv", {
             'flags':'a',
             'encoding': null,

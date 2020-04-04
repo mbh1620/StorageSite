@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd ~/Desktop/StorageSite
+cd ~/Desktop/StorageSite/StorageSite
 node app.js
