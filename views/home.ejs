@@ -13,17 +13,28 @@
     <div class="btn-group" role="group" aria-label="Basic example">
       <button type="button" onclick="showtext()" class="btn btn-light">Create a new folder</button>
     </div>
+    <!-- New file name entry -->
     <div class="input-group mb-3 nameentry" style="display:none">
       <div class="input-group-prepend">
         <button class="btn btn-outline-secondary addnewfolder" onclick="createnewfolder()" type="button"
           id="button-addon1">Create</button>
       </div>
-      <input type="text" class="namebox form-control" placeholder="Folder name"
+      <input type="text" id="namebox" class="namebox form-control" placeholder="Folder name"
         aria-label="Example text with button addon" aria-describedby="button-addon1">
+    </div>
+    <!-- Rename file entry -->
+    <div class="input-group mb-3 renameentry" style="display:none">
+      <div class="input-group-prepend">
+        <button class="btn btn-outline-secondary renamefolder" onclick="renameFile()" type="button"
+          id="button-addon1">Rename File/Folder</button>
+      </div>
+      <input type="text" id="renamebox" class="namebox form-control" placeholder="New Name"
+        aria-label="Example text with button addon" aria-describedby="button-addon1">
+      <input type="hidden" id="filename">
     </div>
     <!-- file input -->
     <button style="float:right" onclick="deleteitemshow()" class="btn btn-light"><i class="fas fa-trash"></i>
-      Delete</button>
+      Edit</button>
     <button style="float:right" onclick="showupload()" class="btn btn-light"><i class="fas fa-upload"></i> Upload
       files</button>
 
@@ -95,11 +106,12 @@
 
 
   function downloadfile(file){
-    $.get('/downloadfile', { file: file}).done(function(){
-      file = file.substring(20, file.length)
-      file = file;
-      console.log(file);
-      window.location = file;
+    $.get('/downloadfile', { currentpath:currentpath, file: file}).done(function(){
+      console.log(currentpath + "/" + file);
+      var link = currentpath + "/" + file;
+      link = link.substring(<%=string_len%>, link.length)
+      console.log(link);
+      window.location = "/" + link;
     })
   }
   
@@ -155,6 +167,25 @@
 
   }
 
+  function renameFile(file) {
+    let url = "/rename"
+    var oldname = $("#filename").val()
+    var newname = $("#renamebox").val()
+    console.log(newname);
+    let form = document.getElementById("renameform")
+    let formData = new FormData(form)
+    
+    $.ajax({
+      type: "POST",
+      url: '/rename',
+      data: { oldname: oldname, newname:newname, currentpath:currentpath},
+    });
+
+    renameitem();
+    searchdir(currentpath);
+
+  }
+
   function uploadFile(file) {
     let url = "/uploadfile"
     let form = document.getElementById("fileuploadform")
@@ -205,6 +236,13 @@
     searchdir(currentpath);
   }
 
+  function renameitem(name){
+    //SHOW A WORD ENTRY
+    $(".renameentry").toggle()
+    $("#filename").val(name)
+
+  }
+
   function deleteitem(name) {
     //AJAX CALL TO SERVER TO DELETE THE SELECTED FILE
     $.post('/deletedir', { dir: currentpath, name: name })
@@ -221,7 +259,7 @@
   //                BREADCRUMB FUNCTIONALITY
   //----------------------------------------------------
   var breadcrumb = []
-  var currentpath = "<%=testFolder%>";//<%= currentUser.name %>";
+  var currentpath = "<%=testFolder%>/<%= currentUser.name %>";
   
   breadcrumb.push("<%= currentUser.name %>"); 
 
@@ -313,9 +351,15 @@
     $(".nameentry").toggle()
   }
   //Function for when enter is pressed
-  $(".namebox").on('keyup', function (e) {
+  $("#namebox").on('keyup', function (e) {
     if (e.keyCode === 13) {
       createnewfolder()
+    }
+  });
+
+  $("#renamebox").on('keyup', function (e) {
+    if (e.keyCode === 13) {
+      renameFile()
     }
   });
 
@@ -389,7 +433,7 @@
 
         var listhtml;
         if (isDelete == true) {
-          listhtml = "<button onclick='deleteitem(`" + response[x].filename + "`)' style='float:right;margin-left:20px; margin-top:0px;' class='btn btn-sm btn-danger'>Delete</button>"
+          listhtml = "<button onclick='deleteitem(`" + response[x].filename + "`)' style='float:right;margin-left:20px; margin-top:0px;' class='btn btn-sm btn-danger'>Delete</button><button onclick='renameitem(`" + response[x].filename + "`)' style='float:right;margin-left:20px; margin-top:0px;' class='btn btn-sm btn-warning'>Rename</button>"
         } else {
           listhtml = ""
         }
@@ -407,7 +451,7 @@
           $('#' + x).append(
             $("<a/>")
               .attr("href", "#")
-              .attr("onclick", "downloadfile('" + currentpath + "/" + response[x].filename + "')")
+              .attr("onclick", "downloadfile('"+ response[x].filename + "')")
               .attr("download", response[x].filename)
               .html(text + '' + response[x].filename)
               .append(

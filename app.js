@@ -23,12 +23,14 @@ var testFolder;
 //Configure the app based on whether its development or production
 
 if(process.env.NODE_ENV === 'production') {
-    testFolder = '/media/pi/ELEMENTS\ B/'
+    testFolder = '/media/pi/ELEMENTS\ B/';
+    string_len = 20;
   }
 
 if(process.env.NODE_ENV === 'development') {
     testFolder = '/Users/matthaywood/Desktop/StorageSite/StorageSite/public/'
-  }
+    string_len = 59;
+}
 
 //PASSPORT SETUP
 const initializePassport = require('./passport-config')
@@ -115,10 +117,10 @@ app.get("/", function(req,res){
 app.get("/usersfiles/:user", function(req,res){
     var user = req.params.user;
     
-    testFolder = testFolder + user;
-    var files = fs.readdirSync(testFolder)
+    
+    var files = fs.readdirSync(testFolder+user)
     var breadcrumb = user
-    res.render("home.ejs", {files:files, breadcrumb:breadcrumb, testFolder:testFolder} );
+    res.render("home.ejs", {string_len:string_len, files:files, breadcrumb:breadcrumb, testFolder:testFolder} );
 }) 
 
 //Post route for searching a directory 
@@ -179,11 +181,12 @@ app.post("/uploadfile",upload.array('fileElem', 5), function(req,res){
 
 app.get("/downloadfile", function(req,res){
     var file = req.query.file;
-    console.log("SENDING FILE: " + file)
-    file = file.substring(20, file.length)
-    console.log(file)
+    var currentpath = req.query.currentpath;
+    console.log("SENDING FILE: " + file + " at: " + currentpath);
+    //file = file.substring(20, file.length)
+    console.log(file);
     
-    res.download(testFolder + file);
+    res.download(currentpath + "/" + file);
     
 
 })
@@ -191,9 +194,12 @@ app.get("/downloadfile", function(req,res){
 //Route for renaming a file
 
 app.post("/rename", function(req,res){
-    var file = req.query.file;
-    console.log("RENAMING FILE: " + file);
-    fs.renameSync(req.body.thepath + "/" + req.body.filename, req.body.thepath + "/" + req.body.newfilename);
+    var newname = req.body.newname;
+    console.log("NEWNAME" + newname);
+    var oldname = req.body.oldname;
+    var thepath = req.body.currentpath;
+    console.log("RENAMING FILE: " + oldname);
+    fs.renameSync(thepath + "/" + oldname, thepath + "/" + newname);
     console.log("DONE");
 })
 
